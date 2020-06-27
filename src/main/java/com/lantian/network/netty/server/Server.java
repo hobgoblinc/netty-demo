@@ -39,7 +39,8 @@ public class Server {
                         protected void initChannel(SocketChannel ch) throws Exception {
                             ch.pipeline().addLast("decoder", new ProtostuffDecoder());
                             ch.pipeline().addLast("encoder", new ProtostuffEncoder());
-                            ch.pipeline().addLast("ping",new IdleStateHandler(15, 0, 0, TimeUnit.MINUTES));
+                            ch.pipeline().addLast("ping",new IdleStateHandler(8,
+                                    0, 0, TimeUnit.SECONDS));
                             ch.pipeline().addLast("heartbeat", new HeartBeatHandler());
                             ch.pipeline().addLast("echo", new EchoHandler());
                         }
@@ -55,7 +56,7 @@ public class Server {
         }
     }
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         int port;
         if (args.length > 0) {
             port = Integer.parseInt(args[0]);

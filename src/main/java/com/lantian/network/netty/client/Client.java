@@ -13,12 +13,18 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class Client {
+
+    private static final Logger log = LoggerFactory.getLogger(Client.class);
 
     public void connect(String host, int port) throws InterruptedException {
         EventLoopGroup group = new NioEventLoopGroup();
@@ -32,7 +38,8 @@ public class Client {
                         @Override
                         public void initChannel(SocketChannel ch) throws Exception {
                             ChannelPipeline p = ch.pipeline();
-                            p.addLast("ping", new IdleStateHandler(0, 2, 0, TimeUnit.SECONDS));
+                            p.addLast("ping", new IdleStateHandler(16, 0,
+                                    0, TimeUnit.SECONDS));
                             p.addLast("decoder", new ProtostuffDecoder());
                             p.addLast("encoder", new ProtostuffEncoder());
                             p.addLast(new HeartBeatClientHandler());
@@ -56,16 +63,15 @@ public class Client {
         }
         // 定时发送echo的任务
         Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors()).scheduleAtFixedRate(() -> {
-//            System.out.println("write echo");
             for (Map.Entry<String, Channel> entry : HeartBeatClientHandler.CHANNEL_HOLDER.entrySet()) {
                 Channel server = entry.getValue();
                 Message message = new Message();
                 message.setType(MessageType.ECHO);
-                message.setEcho("echo");
-                System.out.println("write echo");
+                message.setEcho("i am ok~");
+                log.info("write echo");
                 server.writeAndFlush(message);
             }
-        }, 0,3000, TimeUnit.MILLISECONDS);
+        }, 0,20000, TimeUnit.MILLISECONDS);
         new Client().connect("127.0.0.1", port);
     }
 
